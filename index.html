@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Sofa WebAR</title>
+
+  <!-- A-Frame and AR.js Libraries -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.7/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #panel {
+      position: fixed;
+      z-index: 10;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #status {
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="panel">
+    <strong>3D WebAR Viewer</strong>
+    <div id="status">
+      Point your camera at the Hiro marker to view the sofa.
+    </div>
+  </div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="colorManagement: true; antialias: true"
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+    <!-- Asset Preloader -->
+    <a-assets>
+      <a-asset-item id="sofaModel" src="./assets/sofa_final.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- Hiro Marker containing the 3D Sofa -->
+    <a-marker preset="hiro">
+      <a-entity
+        id="sofaEntity"
+        gltf-model="#sofaModel"
+        position="0 0 0"
+        scale="0.5 0.5 0.5">
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Force 0.5x Ultra-Wide camera zoom if available (for broken main camera)
+    window.addEventListener('camera-init', () => {
+      setTimeout(() => {
+        const video = document.querySelector('video');
+        if (video && video.srcObject) {
+          const track = video.srcObject.getVideoTracks()[0];
+          if (track && track.getCapabilities) {
+            const capabilities = track.getCapabilities();
+            if (capabilities.zoom) {
+              track.applyConstraints({
+                advanced: [{ zoom: capabilities.zoom.min }] // Select minimum zoom level (0.5x)
+              }).catch(err => console.warn('Ultra-wide zoom constraint unavailable:', err));
+            }
+          }
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
